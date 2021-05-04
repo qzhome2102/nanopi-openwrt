@@ -238,7 +238,7 @@ jobs:
           echo "strDevice=$(echo $DEVICE | awk '{print toupper($0)}')" >> $GITHUB_ENV
 
           if [[ ${{ github.event.client_payload.device || github.event.inputs.device }} == *"r1s"* ]]; then
-            exit 0
+            sudo poweroff
           fi
           rm -rf bin/
           LUCI=$(echo `cat $GITHUB_WORKSPACE/$DEVICE.config.seed | grep CONFIG_PACKAGE | sed '/dnsmasq_full_dhcpv6/d;/INCLUDE/d;/docker/d' | grep luci-app | sed 's/CONFIG_PACKAGE_//;s/=y//'`)
