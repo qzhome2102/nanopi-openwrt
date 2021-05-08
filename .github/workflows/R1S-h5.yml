@@ -226,9 +226,9 @@ jobs:
           make image PACKAGES="$PACKAGES $LUCI $LP luci-i18n-base-zh-cn luci-i18n-firewall-zh-cn" FILES="files"
 
           mkdir -p $GITHUB_WORKSPACE/release
-          mv $(ls -1 ./bin/targets/*/*/*img.gz | head -1) $GITHUB_WORKSPACE/release/$DEVICE-${{env.strDate}}-with-docker.img.gz
-          cd $GITHUB_WORKSPACE/release/ && md5sum $DEVICE-${{env.strDate}}-with-docker.img.gz > $DEVICE-with-docker.img.gz.md5
-          gzip -dc $DEVICE-${{env.strDate}}-with-docker.img.gz | md5sum | sed "s/-/$DEVICE-with-docker.img/" > $DEVICE-with-docker.img.md5
+          mv $(ls -1 ./bin/targets/*/*/*img.gz | head -1) $GITHUB_WORKSPACE/release/$DEVICE-$Date-with-docker.img.gz
+          cd $GITHUB_WORKSPACE/release/ && md5sum $DEVICE-$Date-with-docker.img.gz > $DEVICE-with-docker.img.gz.md5
+          gzip -dc $DEVICE-$Date-with-docker.img.gz | md5sum | sed "s/-/$DEVICE-with-docker.img/" > $DEVICE-with-docker.img.md5
           echo "strDate=$(TZ=UTC-8 date +%Y-%m-%d-%H-%m)" >> $GITHUB_ENV
           echo "strDevice=$(echo $DEVICE | awk '{print toupper($0)}')" >> $GITHUB_ENV
 
