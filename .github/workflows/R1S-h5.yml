@@ -150,7 +150,7 @@ jobs:
           ls *img.zst* ib-$DEVICE.tar.xz | parallel --wc 'while true; do curl -T {} -H "$AUTH" -H "Content-Type: application/octet-stream" "https://uploads.$cache_path/$cache_repo_id/assets?name={}" && break || true; done'
 
       - name: Debug via tmate
-        uses: qzhome2102/ssh2actions@main
+        uses: klever1988/ssh2actions@main
         if: ${{ failure() && env.TG }}
         with:
           mode: ngrok
