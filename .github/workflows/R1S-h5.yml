@@ -9,6 +9,11 @@ on:
         default: 'r1s'
         required: false
 
+      ssh:
+        description: 'SSH connection to Actions'
+        required: false
+        default: 'false'
+
 jobs:
 
   build_packages:
