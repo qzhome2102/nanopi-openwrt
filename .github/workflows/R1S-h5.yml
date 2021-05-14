@@ -1,4 +1,4 @@
-name: build 自编译
+name: R1S-H5 
 
 on:
   repository_dispatch:
@@ -11,7 +11,7 @@ on:
       ssh:
         description: 'SSH connection to Actions true or false'
         required: false
-        default: 'false'
+        default: 'false'	
 
 jobs:
 
@@ -22,7 +22,7 @@ jobs:
       DEVICE: ${{ github.event.client_payload.device || github.event.inputs.device }}
       TG: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       DEPLOY_SSHKEY: ${{ secrets.SSH_KEY }}
-    if: github.repository_owner=='qzhome2102'
+    if: github.repository_owner=='klever1988'
 
     steps:
 
@@ -79,11 +79,6 @@ jobs:
           ls -d */ | xargs -n1 -i diff -q {} ../lede/feeds/luci/{} | grep Only | grep lede | grep -E applications\|themes | awk '{print $4}' | xargs -n1 -i echo CONFIG_PACKAGE_{}=m >> ~/lede/more_luci.txt
           popd
 
-
-
-
-
-
       - name: Custom configure file
         run: |
           cd ~/lede
@@ -92,7 +87,6 @@ jobs:
           cat $GITHUB_WORKSPACE/extra_packages.seed >> .config
           cat more_luci.txt >> .config
           make defconfig && cat .config
-
 
       - name: SSH connection to Actions
         uses: P3TERX/ssh2actions@v1.0.0
@@ -144,7 +138,7 @@ jobs:
           sudo umount lede
           sudo losetup -d $LOOP_DEVICE
           export AUTH="Authorization: token ${{ secrets.SEC_TOKEN }}"
-          export cache_path='github.com/repos/qzhome2102/sshactions/releases'
+          export cache_path='github.com/repos/klever1988/sshactions/releases'
           export cache_repo_id='39020554'
           ret=$(curl -sH "$AUTH" "https://api.$cache_path/tags/cache")
           echo $ret | jq -r '.assets[] | select(.name | contains ("'$DEVICE'.img")).id' | \
@@ -166,7 +160,7 @@ jobs:
           curl -k --data chat_id="${{secrets.TELEGRAM_CHAT_ID}}" --data "text=The ${{env.DEVICE}} build ran completed at ${{job.status}}." "https://api.telegram.org/bot${{secrets.TELEGRAM_BOT_TOKEN}}/sendMessage"
 
       - name: Debug via tmate
-        uses: qzhome2102/ssh2actions@main
+        uses: klever1988/ssh2actions@main
         if: ${{ failure() && env.TG }}
         with:
           mode: ngrok
@@ -254,6 +248,9 @@ jobs:
           echo "strDate=$(TZ=UTC-8 date +%Y-%m-%d)" >> $GITHUB_ENV
           echo "strDevice=$(echo $DEVICE | awk '{print toupper($0)}')" >> $GITHUB_ENV
 
+          if [[ ${{ github.event.client_payload.device || github.event.inputs.device }} == *"r1s"* ]]; then
+            exit 0
+          fi
           cd $GITHUB_WORKSPACE/ib
           rm -rf bin/
           LUCI=$(echo `cat $GITHUB_WORKSPACE/$DEVICE.config.seed | grep CONFIG_PACKAGE | sed '/dnsmasq_full_dhcpv6/d;/INCLUDE/d;/docker/d' | grep luci-app | sed 's/CONFIG_PACKAGE_//;s/=y//'`)
