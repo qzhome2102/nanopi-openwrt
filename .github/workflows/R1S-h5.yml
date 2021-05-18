@@ -1,4 +1,4 @@
-name: R1S-H5 
+name: R1S-H5
 
 on:
   repository_dispatch:
@@ -11,7 +11,7 @@ on:
       ssh:
         description: 'SSH connection to Actions true or false'
         required: false
-        default: 'false'	
+        default: 'false'		
 
 jobs:
 
@@ -46,7 +46,7 @@ jobs:
           for i in {1..10}
           do
             curl -sL --fail https://github.com/klever1988/sshactions/releases/download/cache/lede.$DEVICE.img.zst.0$i || break
-          done | zstdmt -d -o lede.img || (truncate -s 22g lede.img && mkfs.btrfs -M lede.img)
+          done | zstdmt -d -o lede.img || (truncate -s 24g lede.img && mkfs.btrfs -M lede.img)
           LOOP_DEVICE=$(losetup -f) && echo "LOOP_DEVICE=$LOOP_DEVICE" >> $GITHUB_ENV
           sudo losetup -P --direct-io $LOOP_DEVICE lede.img
           mkdir lede && sudo mount -o nossd,compress=zstd $LOOP_DEVICE lede
@@ -86,14 +86,8 @@ jobs:
           find package/ -type d -name luci-app-* | rev | cut -d'/' -f1 | rev | xargs -n1 -i echo CONFIG_PACKAGE_{}=m >> .config
           cat $GITHUB_WORKSPACE/extra_packages.seed >> .config
           cat more_luci.txt >> .config
+          echo -e 'CONFIG_PACKAGE_iptables-mod-fullconenat=y\nCONFIG_PACKAGE_kmod-ipt-fullconenat=y\n' >> .config
           make defconfig && cat .config
-
-      - name: SSH connection to Actions
-        uses: P3TERX/ssh2actions@v1.0.0
-        if: (github.event.inputs.ssh == 'true' && github.event.inputs.ssh  != 'false') || contains(github.event.action, 'ssh')
-        env:
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
 
       - name: Build and deploy packages
         run: |
@@ -159,17 +153,12 @@ jobs:
         run: |
           curl -k --data chat_id="${{secrets.TELEGRAM_CHAT_ID}}" --data "text=The ${{env.DEVICE}} build ran completed at ${{job.status}}." "https://api.telegram.org/bot${{secrets.TELEGRAM_BOT_TOKEN}}/sendMessage"
 
-      - name: Debug via tmate
-        uses: klever1988/ssh2actions@main
-        if: ${{ failure() && env.TG }}
-        with:
-          mode: ngrok
+      - name: SSH connection to Actions
+        uses: P3TERX/ssh2actions@v1.0.0
+        if: (github.event.inputs.ssh == 'true' && github.event.inputs.ssh  != 'false') || contains(github.event.action, 'ssh')
         env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          SSH_PASSWORD: ${{secrets.SSH_PASSWORD}}
-          SSH_PUBKEY: ${{secrets.SSH_PUBKEY}}
-          NGROK_TOKEN: ${{secrets.NGROK_TOKEN}}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
 
   generate_slim_firmware:
     needs: build_packages
